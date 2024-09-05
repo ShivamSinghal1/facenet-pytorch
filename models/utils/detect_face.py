@@ -22,6 +22,7 @@ def fixed_batch_process(im_data, model):
         out.append(model(batch))
 
     return tuple(torch.cat(v, dim=0) for v in zip(*out))
+
 def detect_face(imgs, minsize, pnet, rnet, onet, threshold, factor, device):
     if isinstance(imgs, (np.ndarray, torch.Tensor)):
         if isinstance(imgs,np.ndarray):
@@ -310,15 +311,15 @@ def imresample(img, sz):
 
 def batch_resample_by_size(imgs, target_size, device):
     """
-    Batch resampling function grouping by size while preserving order.
+        Batch resampling function grouping by size while preserving order.
 
-    Args:
-    imgs (list of torch.Tensor): List of image tensors
-    target_size (tuple): Target size for resampling (height, width)
-    device (torch.device): Device to perform computation on
+        Args:
+            imgs (list of torch.Tensor): List of image tensors
+            target_size (tuple): Target size for resampling (height, width)
+            device (torch.device): Device to perform computation on
 
-    Returns:
-    torch.Tensor: Batch of resampled images in original order
+        Returns:
+            torch.Tensor: Batch of resampled images in original order
     """
     if not imgs:
         return torch.zeros((0, 3, target_size[0], target_size[1]), device=device)
