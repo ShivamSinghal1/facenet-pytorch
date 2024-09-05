@@ -22,7 +22,6 @@ def fixed_batch_process(im_data, model):
         out.append(model(batch))
 
     return tuple(torch.cat(v, dim=0) for v in zip(*out))
-
 def detect_face(imgs, minsize, pnet, rnet, onet, threshold, factor, device):
     if isinstance(imgs, (np.ndarray, torch.Tensor)):
         if isinstance(imgs,np.ndarray):
@@ -107,14 +106,12 @@ def detect_face(imgs, minsize, pnet, rnet, onet, threshold, factor, device):
     # Second stage
     if len(boxes) > 0:
         im_data = []
-        sizes = []
         for k in range(len(y)):
             if ey[k] > (y[k] - 1) and ex[k] > (x[k] - 1):
                 img_k = imgs[image_inds[k], :, (y[k] - 1):ey[k], (x[k] - 1):ex[k]]
                 im_data.append(img_k)
-                sizes.append((ey[k] - y[k] + 1, ex[k] - x[k] + 1))
 
-        im_data = batch_resample_by_size(im_data, sizes, (24, 24), device)
+        im_data = batch_resample_by_size(im_data, (24, 24), device)
         im_data = (im_data - 127.5) * 0.0078125
 
         # This is equivalent to out = rnet(im_data) to avoid GPU out of memory.
@@ -139,14 +136,12 @@ def detect_face(imgs, minsize, pnet, rnet, onet, threshold, factor, device):
     if len(boxes) > 0:
         y, ey, x, ex = pad(boxes, w, h)
         im_data = []
-        sizes = []
         for k in range(len(y)):
             if ey[k] > (y[k] - 1) and ex[k] > (x[k] - 1):
                 img_k = imgs[image_inds[k], :, (y[k] - 1):ey[k], (x[k] - 1):ex[k]]
                 im_data.append(img_k)
-                sizes.append((ey[k] - y[k] + 1, ex[k] - x[k] + 1))
 
-        im_data = batch_resample_by_size(im_data, sizes, (48, 48), device)
+        im_data = batch_resample_by_size(im_data, (48, 48), device)
         im_data = (im_data - 127.5) * 0.0078125
         
         # This is equivalent to out = onet(im_data) to avoid GPU out of memory.
@@ -313,27 +308,31 @@ def imresample(img, sz):
     return im_data
 
 
-def batch_resample_by_size(imgs, sizes, target_size, device):
+def batch_resample_by_size(imgs, target_size, device):
     """
     Batch resampling function grouping by size while preserving order.
 
     Args:
     imgs (list of torch.Tensor): List of image tensors
-    sizes (list of tuple): List of original sizes (height, width)
     target_size (tuple): Target size for resampling (height, width)
     device (torch.device): Device to perform computation on
 
     Returns:
     torch.Tensor: Batch of resampled images in original order
     """
+    if not imgs:
+        return torch.zeros((0, 3, target_size[0], target_size[1]), device=device)
+
     # Group images by size
     size_groups = defaultdict(list)
     size_to_indices = defaultdict(list)
-    for i, (img, size) in enumerate(zip(imgs, sizes)):
+    for i, img in enumerate(imgs):
+        size = tuple(img.shape[1:])
         size_groups[size].append(img)
         size_to_indices[size].append(i)
 
     resampled_imgs = torch.zeros(len(imgs), 3, target_size[0], target_size[1], device=device)
+
     for size, group in size_groups.items():
         # Stack images of the same size
         batch = torch.stack(group).to(device)
