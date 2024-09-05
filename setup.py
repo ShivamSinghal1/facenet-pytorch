@@ -1,7 +1,7 @@
 import setuptools, os
 
 PACKAGE_NAME = 'facenet-pytorch-custom'
-VERSION = '2.5.2.dev1'
+VERSION = '2.5.2.dev2'
 AUTHOR = 'Shivam Singhal'
 EMAIL = 'shivamsinghal1012@gmail.com'
 DESCRIPTION = 'Pretrained Pytorch face detection and recognition models original - https://github.com/timesler/facenet-pytorch'
